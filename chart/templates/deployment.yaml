@@ -1,0 +1,248 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ template "common.names.fullname" . }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: peertube
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.peertube.updateStrategy }}
+  strategy: {{- toYaml .Values.peertube.updateStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: peertube
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ sha256sum .Values.peertube.config }}
+        {{- if .Values.peertube.podAnnotations }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.peertube.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: peertube
+        {{- if .Values.peertube.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.peertube.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        {{- if .Values.commonLabels }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "peertube.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.peertube.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.peertube.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.peertube.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.peertube.podAffinityPreset "component" "peertube" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.peertube.podAntiAffinityPreset "component" "peertube" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.peertube.nodeAffinityPreset.type "key" .Values.peertube.nodeAffinityPreset.key "values" .Values.peertube.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.peertube.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.peertube.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.peertube.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.peertube.priorityClassName }}
+      priorityClassName: {{ .Values.peertube.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.peertube.schedulerName }}
+      schedulerName: {{ .Values.peertube.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.peertube.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.topologySpreadConstraints "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.peertube.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.peertube.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.peertube.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.peertube.terminationGracePeriodSeconds }}
+      {{- end }}
+      initContainers:
+        {{- if and .Values.volumePermissions.enabled .Values.persistence.enabled }}
+        - name: volume-permissions
+          image: {{ include "peertube.volumePermissions.image" . }}
+          imagePullPolicy: {{ .Values.volumePermissions.image.pullPolicy | quote }}
+          command:
+            - chown
+            - -R
+            - 999:999 
+            - /data
+          securityContext: {{- include "common.tplvalues.render" (dict "value" .Values.volumePermissions.containerSecurityContext "context" $) | nindent 12 }}
+          {{- if .Values.volumePermissions.resources }}
+          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              {{- if .Values.persistence.subPath }}
+              subPath: {{ .Values.persistence.subPath }}
+              {{- end }}
+        {{- end }}
+        {{- if .Values.peertube.initContainers }}
+          {{- include "common.tplvalues.render" (dict "value" .Values.peertube.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+        {{- if and .Values.postgresWait.enabled .Release.IsInstall }}
+        - name: postgres-wait
+          image: {{ include "peertube.postgresWait.image" . }}
+          imagePullPolicy: {{ .Values.postgresWait.image.pullPolicy | quote }}
+          command:
+            - sh
+            - -c
+            - "while ! pg_isready -h {{ include "peertube.database.hostname" . }}; do :; done; sleep 10"
+          securityContext: {{- include "common.tplvalues.render" (dict "value" .Values.postgresWait.containerSecurityContext "context" $) | nindent 12 }}
+          {{- if .Values.postgresWait.resources }}
+          resources: {{- toYaml .Values.postgresWait.resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.peertube.initContainers }}
+          {{- include "common.tplvalues.render" (dict "value" .Values.peertube.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: peertube
+          image: {{ template "peertube.image" . }}
+          imagePullPolicy: {{ .Values.peertube.image.pullPolicy }}
+          {{- if .Values.peertube.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.peertube.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 12 }}
+          {{- else if .Values.peertube.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.command "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 12 }}
+          {{- else if .Values.peertube.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.args "context" $) | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PEERTUBE_WEBSERVER_HOSTNAME
+              value: {{ .Values.peertube.hostname | quote }}
+            - name: PEERTUBE_WEBSERVER_PORT
+              value: "443"
+            - name: PEERTUBE_WEBSERVER_HTTPS
+              value: "true"
+            - name: PEERTUBE_TRUST_PROXY
+              value: {{ .Values.peertube.trustProxy | quote }}
+            - name: PEERTUBE_DB_SSL
+              value: "true"
+            - name: PEERTUBE_DB_HOSTNAME
+              value: {{ include "peertube.database.hostname" . | quote }}
+            - name: PEERTUBE_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "peertube.database.secretName" . }}
+                  key: username
+            - name: PEERTUBE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "peertube.database.secretName" . }}
+                  key: password
+            - name: PEERTUBE_REDIS_HOSTNAME
+              value: {{ include "peertube.redis.hostname" . | quote }}
+            - name: PEERTUBE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "peertube.secretName" . }}
+                  key: secret
+            - name: PEERTUBE_SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "peertube.smtp.secretName" . }}
+                  key: username
+            - name: PEERTUBE_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "peertube.smtp.secretName" . }}
+                  key: password
+            - name: PEERTUBE_SMTP_HOSTNAME
+              value: {{ .Values.peertube.smtp.hostname | quote }}
+            - name: PEERTUBE_SMTP_PORT
+              value: {{ .Values.peertube.smtp.port | quote }}
+            - name: PEERTUBE_SMTP_FROM
+              value: {{ .Values.peertube.smtp.from | quote }}
+            - name: PEERTUBE_SMTP_TLS
+              value: {{ .Values.peertube.smtp.tls | quote }}
+            - name: PEERTUBE_SMTP_DISABLE_STARTTLS
+              value: {{ .Values.peertube.smtp.disable_starttls | quote }}
+            - name: PEERTUBE_ADMIN_EMAIL
+              value: {{ .Values.peertube.admin_email | quote }}
+            {{- if .Values.peertube.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.peertube.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
+          envFrom:
+            {{- if .Values.peertube.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.peertube.extraEnvVarsCM "context" $) }}
+            {{- end }}
+            {{- if .Values.peertube.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.peertube.extraEnvVarsSecret "context" $) }}
+            {{- end }}
+          {{- if .Values.peertube.resources }}
+          resources: {{- toYaml .Values.peertube.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.peertube.containerPorts.http }}
+            - name: metrics
+              containerPort: {{ .Values.peertube.containerPorts.metrics }}
+          {{- if not .Values.diagnosticMode.enabled }}
+          {{- if .Values.peertube.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.customLivenessProbe "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.peertube.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.customReadinessProbe "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.peertube.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.customStartupProbe "context" $) | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.peertube.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config/production.yaml
+              subPath: production.yaml
+            - name: data
+              mountPath: /data
+              {{- if .Values.persistence.subPath }}
+              subPath: {{ .Values.persistence.subPath }}
+              {{- end }}
+            - name: data
+              mountPath: /config
+              {{- if .Values.persistence.subPath }}
+              subPath: {{ .Values.persistence.subPath }}/config/
+              {{- else }}
+              subPath: config/
+              {{- end }}
+          {{- if .Values.peertube.extraVolumeMounts }}
+          {{- include "common.tplvalues.render" (dict "value" .Values.peertube.extraVolumeMounts "context" $) | nindent 12 }}
+          {{- end }}
+        {{- if .Values.peertube.sidecars }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.peertube.sidecars "context" $) | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "common.names.fullname" . }}
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (include "common.names.fullname" .) .Values.persistence.existingClaim }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.peertube.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.peertube.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}

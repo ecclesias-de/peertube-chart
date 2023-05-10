@@ -1,0 +1,76 @@
+peertube:
+  # can not be changed anymore after the first start
+  hostname: peertube.local
+  secret:
+    # Generate one using `openssl rand -hex 32`
+    secret: "08beb94db93b8daff8257772f0c511f4c1710a9b9347d5a7ca7618a07c45ff81"
+    existing_secret: ""
+  # use postgres operator to create a database
+  database:
+    useCRD: true
+    size: 1Gi
+    replicas: 2
+    # config for an external postgres
+    username: ""
+    password: ""
+    existing_secret: ""
+    hostname: ""
+  # use redis operator to deploy redis
+  redis:
+    useCRD: false
+    storageClass: "csi-rbd-sc"
+    size: 1Gi
+  # required, email for root account, and use by the contact form
+  admin_email: "test@example.com"
+  # optional
+  smtp:
+    username: ""
+    password: ""
+    existing_secret: ""
+    hostname: ""
+    port: ""
+    from: ""
+    tls: ""
+    disable_starttls: ""
+  # a ReadWriteMultiple capable storage is needed, for a multiple replicas
+  replicaCount: 1
+
+  resources:
+    limits: {}
+    requests: {}
+
+  updateStrategy:
+    type: Recreate
+
+postgresWait:
+  enabled: false
+
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 12G
+  tls: true
+ 
+persistence:
+  enabled: true
+  storageClass: "csi-rbd-sc"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  existingClaim: ""
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: ""
+
+networkPolicy:
+  ## @param networkPolicy.enabled Enable default network policies
+  enabled: true
+  ## @param networkPolicy.enabled Namespace to allow ingress traffic from
+  ingressNamespace: ingress-nginx
+  ## @param networkPolicy.enabled Namespace to allow monitoring traffic from
+  monitoringNamespace: monitoring

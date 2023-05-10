@@ -1,0 +1,21 @@
+{{- if .Values.peertube.redis.useCRD }}
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: Redis
+metadata:
+  name: {{ template "common.names.fullname" . }}-redis
+spec:
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: {{ .Values.peertube.redis.storageClass | quote }}
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.peertube.redis.size | quote }}
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 1000
+{{- end}}

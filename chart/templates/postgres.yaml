@@ -1,0 +1,28 @@
+{{- if .Values.peertube.database.useCRD }}
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: {{ template "common.names.fullname" . }}-postgres
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    delete-date: "2023-05-09"
+    delete-clustername: {{ template "common.names.fullname" . }}-postgres
+spec:
+  teamId: "se"
+  volume:
+    size: {{ .Values.peertube.database.size | quote }}
+  numberOfInstances: {{ .Values.peertube.database.replicas }}
+  users:
+    peertube:
+  databases:
+    peertube: peertube
+  postgresql:
+    version: "15"
+{{- end }}
