@@ -36,6 +36,9 @@ Peertube users can share videos with p2p, to reduce load on the server. This is 
 It can be disable by setting peertube.config.defaults.p2p.webapp to true in the peertube values.yaml. (Peertube.config is a string containing a yaml config. Modifying defaults.p2p.webapp requires to copy the whole peertube.config option to your values.yaml and then changing .defaults.p2p.webapp.)
 
 
+## increase peertube volume size
+Set `persistence.size` to the desired volume size in your `values.yaml` and run a helm upgrade. (The volume size can not be decreased.)
+
 ## Caveats / Problems
 ### Websockets do not work all the time.
 Sometimes websocktes work sometimes they fail. Maybe this is a problem with 2 nginx containers?
