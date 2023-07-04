@@ -148,7 +148,7 @@ peertube:
   ## @param peertube.containerPorts.http peertube HTTP container port
   ##
   containerPorts:
-    http: 80
+    http: 9000
     metrics: 9091
   ## Configure extra options for peertube containers' liveness and readiness probes
   ## @param peertube.customLivenessProbe Custom livenessProbe that overrides the default one

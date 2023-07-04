@@ -40,7 +40,7 @@ spec:
   ports:
     - name: http
       port: {{ .Values.service.ports.http }}
-      targetPort: 9000
+      targetPort: http
       protocol: TCP
       {{- if and (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) (not (empty .Values.service.nodePorts.http)) }}
       nodePort: {{ .Values.service.nodePorts.http }}
@@ -49,7 +49,7 @@ spec:
       {{- end }}
     - name: metrics
       port: {{ .Values.service.ports.metrics }}
-      targetPort: 9091
+      targetPort: metrics
       protocol: TCP
       {{- if and (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) (not (empty .Values.service.nodePorts.metrics)) }}
       nodePort: {{ .Values.service.nodePorts.metrics }}
