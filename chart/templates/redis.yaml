@@ -15,7 +15,7 @@ spec:
         resources:
           requests:
             storage: {{ .Values.peertube.redis.size | quote }}
-  securityContext:
+  podSecurityContext:
     runAsUser: 1000
     fsGroup: 1000
 {{- end}}
