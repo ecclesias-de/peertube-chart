@@ -98,11 +98,17 @@ spec:
           command:
             - sh
             - -c
-            - "while ! pg_isready -h {{ include "peertube.database.hostname" . }}; do :; done; sleep 10"
+            - "while ! pg_isready -h $PEERTUBE_DB_HOSTNAME; do :; done; sleep 10"
           securityContext: {{- include "common.tplvalues.render" (dict "value" .Values.postgresWait.containerSecurityContext "context" $) | nindent 12 }}
           {{- if .Values.postgresWait.resources }}
           resources: {{- toYaml .Values.postgresWait.resources | nindent 12 }}
           {{- end }}
+          env:
+            - name: PEERTUBE_DB_HOSTNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.peertube.database.configMap }}
+                  key: HOST
         {{- end }}
         {{- if .Values.peertube.initContainers }}
           {{- include "common.tplvalues.render" (dict "value" .Values.peertube.initContainers "context" $) | nindent 8 }}
