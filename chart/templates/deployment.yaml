@@ -164,7 +164,7 @@ spec:
             - name: PEERTUBE_REDIS_AUTH
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.peertube.redis.configMap }}
+                  name: {{ .Values.peertube.redis.secret }}
                   key: password
                   optional: true
             - name: PEERTUBE_SECRET
