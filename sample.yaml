@@ -5,21 +5,18 @@ peertube:
     # Generate one using `openssl rand -hex 32`
     secret: "08beb94db93b8daff8257772f0c511f4c1710a9b9347d5a7ca7618a07c45ff81"
     existing_secret: ""
-  # use postgres operator to create a database
+  # database connection
   database:
-    useCRD: true
-    size: 1Gi
-    replicas: 2
-    # config for an external postgres
-    username: ""
-    password: ""
-    existing_secret: ""
-    hostname: ""
-  # use redis operator to deploy redis
+    # expects key HOST
+    configMap: "postgres"
+    # expects keys: username, password
+    secret: "postgres-peertube"
+  # redis connection
   redis:
-    useCRD: false
-    storageClass: "csi-rbd-sc"
-    size: 1Gi
+    # expects key REDIS_HOST
+    configMap: "redis"
+    # needs key password (optional)
+    secret: "redis"
   # required, email for root account, and use by the contact form
   admin_email: "test@example.com"
   # optional

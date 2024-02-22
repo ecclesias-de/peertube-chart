@@ -136,19 +136,31 @@ spec:
             - name: PEERTUBE_DB_SSL
               value: "true"
             - name: PEERTUBE_DB_HOSTNAME
-              value: {{ include "peertube.database.hostname" . | quote }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.peertube.database.configMap }}
+                  key: HOST
             - name: PEERTUBE_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "peertube.database.secretName" . }}
+                  name: {{ .Values.peertube.database.secret }}
                   key: username
             - name: PEERTUBE_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "peertube.database.secretName" . }}
+                  name: {{ .Values.peertube.database.secret }}
                   key: password
             - name: PEERTUBE_REDIS_HOSTNAME
-              value: {{ include "peertube.redis.hostname" . | quote }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.peertube.redis.configMap }}
+                  key: REDIS_HOST
+            - name: PEERTUBE_REDIS_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.peertube.redis.configMap }}
+                  key: password
+                  optional: true
             - name: PEERTUBE_SECRET
               valueFrom:
                 secretKeyRef:
