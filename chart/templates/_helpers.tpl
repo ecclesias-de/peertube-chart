@@ -57,50 +57,6 @@ Return true if a secret object should be created for peertube configuration
 {{- end -}}
 
 {{/*
-Return the redis hostname
-*/}}
-{{- define "peertube.redis.hostname" -}}
-{{- if .Values.peertube.redis.useCRD }}
-    {{- printf "%s-redis" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-    {{- .Values.peertube.redis.hostname }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the database hostname
-*/}}
-{{- define "peertube.database.hostname" -}}
-{{- if .Values.peertube.database.useCRD }}
-    {{- printf "%s-postgres" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-    {{- .Values.peertube.database.hostname }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the database configuration secret
-*/}}
-{{- define "peertube.database.secretName" -}}
-{{- if .Values.peertube.database.existing_secret -}}
-    {{- printf "%s" (tpl .Values.peertube.database.existing_secret $) -}}
-{{- else if .Values.peertube.database.useCRD }}
-    {{- "postgres-peertube"}}
-{{- else -}}
-    {{- printf "%s-database-config" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return true if a secret object should be created for database configuration
-*/}}
-{{- define "peertube.database.createSecret" -}}
-{{- if and (not .Values.peertube.database.useCRD) (not .Values.peertube.database.existing_secret) }}
-    {{- true -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the smtp configuration secret
 */}}
 {{- define "peertube.smtp.secretName" -}}
