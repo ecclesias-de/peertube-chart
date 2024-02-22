@@ -124,7 +124,7 @@ peertube:
   image:
     registry: docker.io
     repository: chocobozzz/peertube
-    tag: v5.1.0-bullseye
+    tag: v6.0.3-bookworm
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
