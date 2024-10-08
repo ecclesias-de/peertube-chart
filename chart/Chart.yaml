@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 5.1.0
+appVersion: 6.3.2
 dependencies:
   - name: common
     repository: oci://registry-1.docker.io/bitnamicharts
@@ -12,4 +12,4 @@ maintainers:
   - name: Metaways Infosystems GmbH
     url: https://www.metaways.de/
 name: peertube
-version: 0.1.0
+version: 0.1.4
