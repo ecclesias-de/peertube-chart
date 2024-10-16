@@ -147,6 +147,8 @@ peertube:
   containerPorts:
     http: 9000
     metrics: 9091
+    rtmp: 1935
+    rtmps: 1936
   ## Configure extra options for peertube containers' liveness and readiness probes
   ## @param peertube.customLivenessProbe Custom livenessProbe that overrides the default one
   ##
@@ -333,6 +335,65 @@ service:
   nodePorts:
     http: ""
     metrics: ""
+  ## @param service.clusterIP peertube service Cluster IP
+  ## e.g.:
+  ## clusterIP: None
+  ##
+  clusterIP: ""
+  ## @param service.loadBalancerIP peertube service Load Balancer IP
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+  ##
+  loadBalancerIP: ""
+  ## @param service.loadBalancerSourceRanges peertube service Load Balancer sources
+  ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+  ## e.g:
+  ## loadBalancerSourceRanges:
+  ##   - 10.10.10.0/24
+  ##
+  loadBalancerSourceRanges: []
+  ## @param service.externalTrafficPolicy peertube service external traffic policy
+  ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+  ##
+  externalTrafficPolicy: Cluster
+  ## @param service.annotations Additional custom annotations for peertube service
+  ##
+  annotations: {}
+  ## @param service.extraPorts Extra ports to expose in peertube service (normally used with the `sidecars` value)
+  ##
+  extraPorts: []
+  ## @param service.sessionAffinity Control where client requests go, to the same pod or round-robin
+  ## Values: ClientIP or None
+  ## ref: https://kubernetes.io/docs/user-guide/services/
+  ##
+  sessionAffinity: None
+  ## @param service.sessionAffinityConfig Additional settings for the sessionAffinity
+  ## sessionAffinityConfig:
+  ##   clientIP:
+  ##     timeoutSeconds: 300
+  ##
+  sessionAffinityConfig: {}
+## peertube service parameters
+##
+serviceRtmp:
+  # enable rtmp service
+  enabled: false
+  ## @param service.type peertube service type
+  ##
+  type: LoadBalancer
+  ## @param service.ports.http peertube service HTTP port
+  ## @param service.ports.https peertube service HTTPS port
+  ##
+  ports:
+    rtmp: 1935
+    rtmps: 1936
+  ## Node ports to expose
+  ## @param service.nodePorts.http Node port for HTTP
+  ## @param service.nodePorts.https Node port for HTTPS
+  ## NOTE: choose port between <30000-32767>
+  ##
+  nodePorts:
+    rtmp: ""
+    rtmps: ""
   ## @param service.clusterIP peertube service Cluster IP
   ## e.g.:
   ## clusterIP: None

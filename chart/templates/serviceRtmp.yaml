@@ -1,0 +1,65 @@
+{{- if .Values.serviceRtmp.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "common.names.fullname" . }}-rtmp
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: peertube
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.serviceRtmp.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.serviceRtmp.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.serviceRtmp.annotations "context" $) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.serviceRtmp.type }}
+  {{- if and .Values.serviceRtmp.clusterIP (eq .Values.serviceRtmp.type "ClusterIP") }}
+  clusterIP: {{ .Values.serviceRtmp.clusterIP }}
+  {{- end }}
+  {{- if .Values.serviceRtmp.sessionAffinity }}
+  sessionAffinity: {{ .Values.serviceRtmp.sessionAffinity }}
+  {{- end }}
+  {{- if .Values.serviceRtmp.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- include "common.tplvalues.render" (dict "value" .Values.serviceRtmp.sessionAffinityConfig "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if or (eq .Values.serviceRtmp.type "LoadBalancer") (eq .Values.serviceRtmp.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.serviceRtmp.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.serviceRtmp.type "LoadBalancer") (not (empty .Values.serviceRtmp.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{ .Values.serviceRtmp.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if and (eq .Values.serviceRtmp.type "LoadBalancer") (not (empty .Values.serviceRtmp.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.serviceRtmp.loadBalancerIP }}
+  {{- end }}
+  ports:
+    - name: rtmp
+      port: {{ .Values.serviceRtmp.ports.rtmp }}
+      targetPort: rtmp
+      protocol: TCP
+      {{- if and (or (eq .Values.serviceRtmp.type "NodePort") (eq .Values.serviceRtmp.type "LoadBalancer")) (not (empty .Values.serviceRtmp.nodePorts.rtmp)) }}
+      nodePort: {{ .Values.serviceRtmp.nodePorts.rtmp }}
+      {{- else if eq .Values.serviceRtmp.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: rtmps
+      port: {{ .Values.serviceRtmp.ports.rtmps }}
+      targetPort: rtmps
+      protocol: TCP
+      {{- if and (or (eq .Values.serviceRtmp.type "NodePort") (eq .Values.serviceRtmp.type "LoadBalancer")) (not (empty .Values.serviceRtmp.nodePorts.rtmps)) }}
+      nodePort: {{ .Values.serviceRtmp.nodePorts.rtmps }}
+      {{- else if eq .Values.serviceRtmp.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    {{- if .Values.serviceRtmp.extraPorts }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.serviceRtmp.extraPorts "context" $) | nindent 4 }}
+    {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: peertube
+{{- end -}}

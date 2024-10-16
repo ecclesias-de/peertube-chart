@@ -214,6 +214,10 @@ spec:
               containerPort: {{ .Values.peertube.containerPorts.http }}
             - name: metrics
               containerPort: {{ .Values.peertube.containerPorts.metrics }}
+            - name: rtmp
+              containerPort: {{ .Values.peertube.containerPorts.rtmp }}
+            - name: rtmps
+              containerPort: {{ .Values.peertube.containerPorts.rtmps }}
           {{- if not .Values.diagnosticMode.enabled }}
           {{- if .Values.peertube.customLivenessProbe }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.peertube.customLivenessProbe "context" $) | nindent 12 }}
