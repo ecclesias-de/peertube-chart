@@ -8,6 +8,6 @@ stages:
   - package
 
 include:
-  - component: $CI_SERVER_FQDN/gitlabci-components/helm-build/build@1.2.0
+  - component: $CI_SERVER_FQDN/gitlabci-components/helm-build/build@1.2.1
     inputs:
       name: peertube
