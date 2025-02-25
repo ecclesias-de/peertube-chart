@@ -312,6 +312,10 @@ peertube:
   ##
   initContainers: []
 
+metadata:
+  name:
+  team:
+
 ## @section Traffic Exposure Parameters
 ##
 
