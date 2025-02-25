@@ -1,19 +1,13 @@
-.build:
-  stage: build
-  image: alpine/helm
-  variables:
-    CHART_VERSION: ""
-  before_script:
-    - helm registry login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-  script:
-    - 'sed -i "/^version:/c\version: ${CHART_VERSION}" chart/Chart.yaml'
-    - helm dependency build chart
-    - helm package chart
-    - helm push peertube-*.tgz oci://${CI_REGISTRY_IMAGE}
-
-build:
-  extends: .build
-  variables:
-    CHART_VERSION: ${CI_COMMIT_TAG}
+workflow:
   rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
+
+stages:
+  - package
+
+include:
+  - component: $CI_SERVER_FQDN/gitlabci-components/helm-build/build@1.2.0
+    inputs:
+      name: peertube
