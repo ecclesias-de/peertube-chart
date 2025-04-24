@@ -9,6 +9,9 @@ metadata:
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
+    {{- if .Values.serviceRtmp.labels }}
+    {{ .Values.serviceRtmp.labels | toYaml | nindent 4 }}
+    {{- end }}
   {{- if or .Values.serviceRtmp.annotations .Values.commonAnnotations }}
   annotations:
     {{- if .Values.serviceRtmp.annotations }}

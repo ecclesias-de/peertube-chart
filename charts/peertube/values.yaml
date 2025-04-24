@@ -422,6 +422,7 @@ serviceRtmp:
   ## @param service.annotations Additional custom annotations for peertube service
   ##
   annotations: {}
+  labels: {}
   ## @param service.extraPorts Extra ports to expose in peertube service (normally used with the `sidecars` value)
   ##
   extraPorts: []
